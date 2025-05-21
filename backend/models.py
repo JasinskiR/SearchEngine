@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import List, Optional
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any
 
 class Recipe(BaseModel):
     title: str
@@ -15,3 +15,17 @@ class Recipe(BaseModel):
     rating: Optional[str] = None
     category: Optional[str] = None
     cousine: Optional[str] = None
+
+class SearchQuery(BaseModel):
+    query: str
+
+class AdvancedQuery(BaseModel):
+    q: str
+
+class FilterQuery(BaseModel):
+    category: Optional[str] = None
+    cousine: Optional[str] = None
+    maxTime: Optional[str] = None
+
+class SearchResponse(BaseModel):
+    hits: Dict[str, Any]
