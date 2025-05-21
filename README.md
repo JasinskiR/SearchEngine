@@ -22,3 +22,9 @@ npm install axios
 ```
 ### Backend - Swagger
 Swagger is available at `http://localhost:8000/docs`
+
+# To build project
+Rcommended to manage with docker desktop
+```
+docker-compose up -d
+```
