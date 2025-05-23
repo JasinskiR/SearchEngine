@@ -15,7 +15,7 @@ export default function FilterPanel({ filters, onFilterChange, onApplyFilters })
   const handleReset = () => {
     onFilterChange({
       category: '',
-      cousine: '',
+      cuisine: '',
       maxTime: ''
     });
     onApplyFilters();
@@ -34,32 +34,32 @@ export default function FilterPanel({ filters, onFilterChange, onApplyFilters })
             onChange={handleChange}
           >
             <option value="">Wszystkie kategorie</option>
-            <option value="dessert">Desery</option>
-            <option value="main course">Dania główne</option>
-            <option value="appetizer">Przystawki</option>
-            <option value="soup">Zupy</option>
-            <option value="salad">Sałatki</option>
-            <option value="breakfast">Śniadania</option>
-            <option value="vegetarian">Wegetariańskie</option>
+            <option value="Dessert">Desery</option>
+            <option value="Dinner">Dania główne</option>
+            <option value="Appetizer">Przystawki</option>
+            <option value="Soup">Zupy</option>
+            <option value="Salad">Sałatki</option>
+            <option value="Breakfast">Śniadania</option>
+            <option value="Vegetarian">Wegetariańskie</option>
           </select>
         </div>
 
         <div className="filter-group">
-          <label htmlFor="cousine">Kuchnia:</label>
+          <label htmlFor="cuisine">Kuchnia:</label>
           <select 
-            id="cousine" 
-            name="cousine" 
-            value={filters.cousine} 
+            id="cuisine" 
+            name="cuisine" 
+            value={filters.cuisine} 
             onChange={handleChange}
           >
             <option value="">Wszystkie kuchnie</option>
-            <option value="italian">Włoska</option>
-            <option value="french">Francuska</option>
-            <option value="polish">Polska</option>
-            <option value="american">Amerykańska</option>
-            <option value="asian">Azjatycka</option>
-            <option value="mexican">Meksykańska</option>
-            <option value="indian">Indyjska</option>
+            <option value="Italian">Włoska</option>
+            <option value="French">Francuska</option>
+            <option value="Polish">Polska</option>
+            <option value="American">Amerykańska</option>
+            <option value="Asian">Azjatycka</option>
+            <option value="Mexican">Meksykańska</option>
+            <option value="Indian">Indyjska</option>
           </select>
         </div>
 

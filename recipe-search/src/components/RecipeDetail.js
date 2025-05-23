@@ -14,7 +14,7 @@ export default function RecipeDetail({ recipe, onBack }) {
     instructions,
     rating,
     category,
-    cousine,
+    cuisine,
     url
   } = recipe._source;
 
@@ -36,7 +36,7 @@ export default function RecipeDetail({ recipe, onBack }) {
           
           {category && <div className="recipe-detail-category">{category}</div>}
           
-          {cousine && <div className="recipe-detail-cuisine">{cousine}</div>}
+          {cuisine && <div className="recipe-detail-cuisine">{cuisine}</div>}
         </div>
       </div>
       

@@ -2,7 +2,7 @@ import React from 'react';
 import './RecipeCard.css';
 
 export default function RecipeCard({ recipe, onClick }) {
-  const { title, image, description, cousine, total_time, rating } = recipe._source;
+  const { title, image, description, cuisine, total_time, rating } = recipe._source;
   
   const truncateDescription = (text, maxLength = 100) => {
     if (!text) return '';
@@ -24,7 +24,7 @@ export default function RecipeCard({ recipe, onClick }) {
         <h3 className="recipe-title">{title}</h3>
         
         <div className="recipe-meta">
-          {cousine && <span className="recipe-cuisine">{cousine}</span>}
+          {cuisine && <span className="recipe-cuisine">{cuisine}</span>}
           {total_time && <span className="recipe-time">{total_time}</span>}
         </div>
         

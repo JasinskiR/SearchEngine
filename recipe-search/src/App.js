@@ -12,7 +12,7 @@ function App() {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [filters, setFilters] = useState({
     category: '',
-    cousine: '',
+    cuisine: '',
     maxTime: ''
   });
   

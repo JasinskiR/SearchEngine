@@ -29,7 +29,7 @@ def basic_search(query: str):
         "query": {
             "multi_match": {
                 "query": query,
-                "fields": ["title^3", "description", "ingredients^2", "category", "cousine"],
+                "fields": ["title^3", "description", "ingredients^2", "category", "cuisine"],
                 "fuzziness": "AUTO"
             }
         },
@@ -44,7 +44,7 @@ def filter_search(filters: Dict[str, str]):
 
     # Przetwarzanie filtrów kategorii i kuchni
     for field, value in filters.items():
-        if field in ["category", "cousine"] and value:
+        if field in ["category", "cuisine"] and value:
             must_filters.append({"match": {field: value}})
     
     # Specjalne przetwarzanie dla filtru czasu
@@ -89,7 +89,7 @@ def advanced_search(query: str):
         "query": {
             "query_string": {
                 "query": query,
-                "fields": ["title^3", "description", "ingredients^2", "category", "cousine"],
+                "fields": ["title^3", "description", "ingredients^2", "category", "cuisine"],
                 "default_operator": "AND"
             }
         },

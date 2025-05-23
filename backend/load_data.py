@@ -25,7 +25,7 @@ def create_index_mapping():
                 "instructions": {"type": "text", "analyzer": "english"},
                 "rating": {"type": "text", "fields": {"float": {"type": "float", "null_value": 0}}},
                 "category": {"type": "keyword"},
-                "cousine": {"type": "keyword"}
+                "cuisine": {"type": "keyword"}
             }
         },
         "settings": {

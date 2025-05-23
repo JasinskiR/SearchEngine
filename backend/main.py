@@ -61,8 +61,8 @@ async def search_recipes(query: str = Query(..., description="Fraza do wyszukani
 async def filter_recipes(filters: FilterQuery):
     """
     Filtrowanie przepisów po różnych kryteriach:
-    - category: kategoria przepisu (np. 'dessert', 'main course')
-    - cousine: kuchnia (np. 'italian', 'french')
+    - category: kategoria przepisu (np. 'dessert', 'dinner')
+    - cuisine: kuchnia (np. 'italian', 'french')
     - maxTime: maksymalny czas przygotowania (np. '30 min')
     """
     try:
@@ -120,7 +120,7 @@ async def get_cuisines():
             "aggs": {
                 "cuisines": {
                     "terms": {
-                        "field": "cousine",
+                        "field": "cuisine",
                         "size": 30
                     }
                 }

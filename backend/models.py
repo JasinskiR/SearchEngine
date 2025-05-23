@@ -14,7 +14,7 @@ class Recipe(BaseModel):
     instructions: List[str]
     rating: Optional[str] = None
     category: Optional[str] = None
-    cousine: Optional[str] = None
+    cuisine: Optional[str] = None
 
 class SearchQuery(BaseModel):
     query: str
@@ -24,7 +24,7 @@ class AdvancedQuery(BaseModel):
 
 class FilterQuery(BaseModel):
     category: Optional[str] = None
-    cousine: Optional[str] = None
+    cuisine: Optional[str] = None
     maxTime: Optional[str] = None
 
 class SearchResponse(BaseModel):
