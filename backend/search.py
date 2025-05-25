@@ -1,18 +1,15 @@
 from elastic_config import es, RECIPE_INDEX
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
-def basic_search(query: str):
-    """
-    Podstawowe wyszukiwanie przepisów po różnych polach z wagami.
-    """
-    # Specjalny przypadek dla pobierania początkowych przepisów
+def basic_search(query: str, page: int = 1, page_size: int = 12):
+    from_ = (page - 1) * page_size
+
+    # Specjalny przypadek dla pobierania popularnych przepisów
     if query.lower() == 'popular':
         return es.search(index=RECIPE_INDEX, body={
             "query": {
                 "function_score": {
-                    "query": {
-                        "match_all": {}
-                    },
+                    "query": {"match_all": {}},
                     "functions": [
                         {
                             "filter": {"exists": {"field": "rating"}},
@@ -21,9 +18,10 @@ def basic_search(query: str):
                     ]
                 }
             },
-            "size": 12
+            "from": from_,
+            "size": page_size
         })
-    
+
     # Standardowe wyszukiwanie
     return es.search(index=RECIPE_INDEX, body={
         "query": {
@@ -33,58 +31,47 @@ def basic_search(query: str):
                 "fuzziness": "AUTO"
             }
         },
-        "size": 24
+        "from": from_,
+        "size": page_size
     })
 
-def filter_search(filters: Dict[str, str]):
-    """
-    Wyszukiwanie z filtrowaniem po różnych kryteriach.
-    """
+def filter_search(filters: Dict[str, str], page: int = 1, page_size: int = 12):
+    from_ = (page - 1) * page_size
     must_filters = []
 
-    # Przetwarzanie filtrów kategorii i kuchni
     for field, value in filters.items():
         if field in ["category", "cuisine"] and value:
             must_filters.append({"match": {field: value}})
-    
-    # Specjalne przetwarzanie dla filtru czasu
+
     if "maxTime" in filters and filters["maxTime"]:
-        # Ekstrahowanie liczby minut z ciągu (np. "30 min" -> 30)
-        time_str = filters["maxTime"]
         try:
-            minutes = int(''.join(filter(str.isdigit, time_str)))
-            # Dodawanie filtru dla całkowitego czasu
+            minutes = int(''.join(filter(str.isdigit, filters["maxTime"])))
             must_filters.append(
                 {"range": {"total_time": {"lte": f"{minutes} min"}}}
             )
         except ValueError:
-            # Jeśli nie można przekonwertować na liczbę, ignoruj filtr czasu
             pass
-    
-    # Jeśli brak filtrów, zwróć popularne przepisy
+
     if not must_filters:
         return es.search(index=RECIPE_INDEX, body={
-            "query": {
-                "match_all": {}
-            },
-            "size": 12
+            "query": {"match_all": {}},
+            "from": from_,
+            "size": page_size
         })
-    
-    # Wyszukiwanie z filtrami
+
     return es.search(index=RECIPE_INDEX, body={
         "query": {
             "bool": {
                 "must": must_filters
             }
         },
-        "size": 24
+        "from": from_,
+        "size": page_size
     })
 
-def advanced_search(query: str):
-    """
-    Zaawansowane wyszukiwanie z wykorzystaniem Elasticsearch Query String.
-    Pozwala na użycie operatorów logicznych AND, OR, NOT oraz grupowania.
-    """
+def advanced_search(query: str, page: int = 1, page_size: int = 12):
+    from_ = (page - 1) * page_size
+
     return es.search(index=RECIPE_INDEX, body={
         "query": {
             "query_string": {
@@ -93,5 +80,6 @@ def advanced_search(query: str):
                 "default_operator": "AND"
             }
         },
-        "size": 24
+        "from": from_,
+        "size": page_size
     })

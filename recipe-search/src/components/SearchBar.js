@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './SearchBar.css';
 
-export default function SearchBar({ onSearch }) {
+export default function SearchBar({ onSearch, resetTrigger }) {
   const [query, setQuery] = useState('');
   const [isExpert, setIsExpert] = useState(false);
+
+  useEffect(() => {
+    setQuery('');
+    setIsExpert(false);
+  }, [resetTrigger]);
 
   const handleSearch = (e) => {
     e.preventDefault();

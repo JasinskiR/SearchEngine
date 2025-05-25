@@ -46,19 +46,19 @@ async def health_check():
         }
 
 @app.get("/search", response_model_exclude_none=True)
-async def search_recipes(query: str = Query(..., description="Fraza do wyszukania")):
+async def search_recipes(query: str = Query(..., description="Fraza do wyszukania"), page: int = Query(1, ge=1)):
     """
     Wyszukiwanie przepisów po frazie.
     Domyślnie przeszukuje tytuły, opisy, składniki i kategorie.
     """
     try:
-        results = basic_search(query)
+        results = basic_search(query, page)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during search: {str(e)}")
 
 @app.post("/filter", response_model_exclude_none=True)
-async def filter_recipes(filters: FilterQuery):
+async def filter_recipes(filters: FilterQuery, page: int = Query(1, ge=1)):
     """
     Filtrowanie przepisów po różnych kryteriach:
     - category: kategoria przepisu (np. 'dessert', 'dinner')
@@ -68,13 +68,13 @@ async def filter_recipes(filters: FilterQuery):
     try:
         # Konwersja modelu Pydantic na słownik i usunięcie pustych wartości
         filter_dict = {k: v for k, v in filters.dict().items() if v is not None and v != ""}
-        results = filter_search(filter_dict)
+        results = filter_search(filter_dict, page)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during filtering: {str(e)}")
 
 @app.get("/advanced", response_model_exclude_none=True)
-async def expert_query(q: str = Query(..., description="Zapytanie w formacie Elasticsearch Query String")):
+async def expert_query(q: str = Query(..., description="Zapytanie w formacie Elasticsearch Query String"), page: int = Query(1, ge=1)):
     """
     Zaawansowane wyszukiwanie z użyciem składni Elasticsearch Query String.
     Pozwala na użycie operatorów AND, OR, NOT, nawiasów itp.
@@ -85,7 +85,7 @@ async def expert_query(q: str = Query(..., description="Zapytanie w formacie Ela
     - (włoska OR francuska) AND makaron NOT "sos pomidorowy"
     """
     try:
-        results = advanced_search(q)
+        results = advanced_search(q, page)
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during advanced search: {str(e)}")
