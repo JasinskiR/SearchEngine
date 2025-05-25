@@ -13,7 +13,7 @@ function App() {
   const [filters, setFilters] = useState({
     category: '',
     cuisine: '',
-    maxTime: ''
+    minRating: ''
   });
   const [resetCounter, setResetCounter] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -127,7 +127,7 @@ function App() {
           <button 
             onClick={() => {
               setSelectedRecipe(null);
-              setFilters({ category: '', cuisine: '', maxTime: '' });
+              setFilters({ category: '', cuisine: '', minRating: '' });
               setCurrentPage(1);
               setLastMode('home');
               setLastQuery('popular');

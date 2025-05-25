@@ -12,7 +12,7 @@ export default function RecipeDetail({ recipe, onBack }) {
     servings,
     ingredients,
     instructions,
-    rating,
+    ratings,
     category,
     cuisine,
     url
@@ -28,9 +28,9 @@ export default function RecipeDetail({ recipe, onBack }) {
         <h1 className="recipe-detail-title">{title}</h1>
         
         <div className="recipe-detail-meta">
-          {rating && (
+          {ratings && (
             <div className="recipe-detail-rating">
-              <span className="detail-rating-star">★</span> {rating}
+              <span className="detail-rating-star">★</span> {ratings}
             </div>
           )}
           

@@ -12,7 +12,7 @@ class Recipe(BaseModel):
     servings: str
     ingredients: List[str]
     instructions: List[str]
-    rating: Optional[str] = None
+    ratings: Optional[float] = None
     category: Optional[str] = None
     cuisine: Optional[str] = None
 
@@ -25,7 +25,7 @@ class AdvancedQuery(BaseModel):
 class FilterQuery(BaseModel):
     category: Optional[str] = None
     cuisine: Optional[str] = None
-    maxTime: Optional[str] = None
+    minRating: Optional[str] = None
 
 class SearchResponse(BaseModel):
     hits: Dict[str, Any]

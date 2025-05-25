@@ -16,7 +16,7 @@ export default function FilterPanel({ filters, onFilterChange, onApplyFilters })
     onFilterChange({
       category: '',
       cuisine: '',
-      maxTime: ''
+      minRating: ''
     });
     onApplyFilters();
   };
@@ -64,18 +64,17 @@ export default function FilterPanel({ filters, onFilterChange, onApplyFilters })
         </div>
 
         <div className="filter-group">
-          <label htmlFor="maxTime">Maksymalny czas:</label>
+          <label htmlFor="minRating">Ocena użytkowników:</label>
           <select 
-            id="maxTime" 
-            name="maxTime" 
-            value={filters.maxTime} 
+            id="minRating" 
+            name="minRating" 
+            value={filters.minRating} 
             onChange={handleChange}
           >
-            <option value="">Dowolny czas</option>
-            <option value="15 min">Do 15 minut</option>
-            <option value="30 min">Do 30 minut</option>
-            <option value="45 min">Do 45 minut</option>
-            <option value="60 min">Do 1 godziny</option>
+            <option value="">Dowolna</option>
+            <option value="3">co najmniej 3.0</option>
+            <option value="4">co najmniej 4.0</option>
+            <option value="4.5">co najmniej 4.5</option>
           </select>
         </div>
 

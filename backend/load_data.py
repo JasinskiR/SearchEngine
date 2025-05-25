@@ -23,7 +23,7 @@ def create_index_mapping():
                 "servings": {"type": "text"},
                 "ingredients": {"type": "text", "analyzer": "english"},
                 "instructions": {"type": "text", "analyzer": "english"},
-                "rating": {"type": "text", "fields": {"float": {"type": "float", "null_value": 0}}},
+                "ratings": {"type": "float", "null_value": 0},
                 "category": {"type": "keyword"},
                 "cuisine": {"type": "keyword"}
             }

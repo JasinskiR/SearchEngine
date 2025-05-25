@@ -2,7 +2,7 @@ import React from 'react';
 import './RecipeCard.css';
 
 export default function RecipeCard({ recipe, onClick }) {
-  const { title, image, description, cuisine, total_time, rating } = recipe._source;
+  const { title, image, description, cuisine, total_time, ratings } = recipe._source;
   
   const truncateDescription = (text, maxLength = 100) => {
     if (!text) return '';
@@ -13,9 +13,9 @@ export default function RecipeCard({ recipe, onClick }) {
     <div className="recipe-card" onClick={() => onClick(recipe)}>
       <div className="recipe-image-container">
         <img src={image} alt={title} className="recipe-image" />
-        {rating && (
+        {ratings && (
           <div className="recipe-rating">
-            <span className="rating-star">★</span> {rating}
+            <span className="rating-star">★</span> {ratings}
           </div>
         )}
       </div>

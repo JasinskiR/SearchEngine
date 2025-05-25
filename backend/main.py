@@ -63,7 +63,7 @@ async def filter_recipes(filters: FilterQuery, page: int = Query(1, ge=1)):
     Filtrowanie przepisów po różnych kryteriach:
     - category: kategoria przepisu (np. 'dessert', 'dinner')
     - cuisine: kuchnia (np. 'italian', 'french')
-    - maxTime: maksymalny czas przygotowania (np. '30 min')
+    - minRating: minimalna ocena użytkowników
     """
     try:
         # Konwersja modelu Pydantic na słownik i usunięcie pustych wartości

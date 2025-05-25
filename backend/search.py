@@ -43,11 +43,11 @@ def filter_search(filters: Dict[str, str], page: int = 1, page_size: int = 12):
         if field in ["category", "cuisine"] and value:
             must_filters.append({"match": {field: value}})
 
-    if "maxTime" in filters and filters["maxTime"]:
+    if "minRating" in filters and filters["minRating"]:
         try:
-            minutes = int(''.join(filter(str.isdigit, filters["maxTime"])))
+            rating_value = float(filters["minRating"])
             must_filters.append(
-                {"range": {"total_time": {"lte": f"{minutes} min"}}}
+                {"range": {"ratings": {"gte": rating_value}}}
             )
         except ValueError:
             pass
