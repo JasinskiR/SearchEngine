@@ -20,6 +20,7 @@ function App() {
   const [lastQuery, setLastQuery] = useState('popular');
   const [lastMode, setLastMode] = useState('basic');
   const [hasActiveSearch, setHasActiveSearch] = useState(false);
+  const [totalResults, setTotalResults] = useState(0);
   
   const getActiveFilters = () => {
     return Object.fromEntries(
@@ -32,6 +33,7 @@ function App() {
     try {
       const res = await searchRecipes('popular');
       setResults(res.data.hits.hits);
+      setTotalResults(res.data.hits.total.value || res.data.hits.total);
       setHasActiveSearch(false);
     } catch (error) {
       console.error('Error fetching initial recipes:', error);
@@ -61,6 +63,7 @@ function App() {
         }
       }
       setResults(res.data.hits.hits);
+      setTotalResults(res.data.hits.total.value || res.data.hits.total);
     } catch (error) {
       console.error('Search error:', error);
       setResults([]);
@@ -121,6 +124,8 @@ function App() {
   };
 
   const getResultsHeading = () => {
+    const resultsCount = totalResults > 0 ? ` (${totalResults} wyników)` : '';
+    
     if (results.length === 0) {
       return "Nie znaleziono przepisów spełniających kryteria";
     }
@@ -130,14 +135,14 @@ function App() {
     
     if (hasActiveSearch && hasFilters) {
       const displayQuery = lastQuery.startsWith('!') ? lastQuery.substring(1) : lastQuery;
-      return `Wyniki wyszukiwania "${displayQuery}" z zastosowanymi filtrami`;
+      return `Wyniki wyszukiwania "${displayQuery}" z zastosowanymi filtrami${resultsCount}`;
     } else if (hasActiveSearch) {
       const displayQuery = lastQuery.startsWith('!') ? lastQuery.substring(1) : lastQuery;
-      return `Wyniki wyszukiwania "${displayQuery}"`;
+      return `Wyniki wyszukiwania "${displayQuery}"${resultsCount}`;
     } else if (hasFilters) {
-      return "Przepisy spełniające wybrane filtry";
+      return `Przepisy spełniające wybrane filtry${resultsCount}`;
     } else {
-      return "Popularne przepisy";
+      return `Popularne przepisy${resultsCount}`;
     }
   };
 
@@ -189,8 +194,10 @@ function App() {
                     {currentPage > 1 && (
                       <button onClick={() => setCurrentPage(currentPage - 1)}>← Poprzednia</button>
                     )}
-                    <span style={{ margin: '0 1rem' }}>Strona {currentPage}</span>
-                    {results.length === 12 && (
+                    <span style={{ margin: '0 1rem' }}>
+                      Strona {currentPage} z {Math.ceil(totalResults / 12)}
+                    </span>
+                    {results.length === 12 && currentPage < Math.ceil(totalResults / 12) && (
                       <button onClick={() => setCurrentPage(currentPage + 1)}>Następna →</button>
                     )}
                   </div>
