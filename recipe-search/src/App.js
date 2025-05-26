@@ -18,14 +18,21 @@ function App() {
   const [resetCounter, setResetCounter] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [lastQuery, setLastQuery] = useState('popular');
-  const [lastMode, setLastMode] = useState('basic'); // 'basic' | 'advanced' | 'filter'
-  const [lastFilters, setLastFilters] = useState({});
+  const [lastMode, setLastMode] = useState('basic');
+  const [hasActiveSearch, setHasActiveSearch] = useState(false);
+  
+  const getActiveFilters = () => {
+    return Object.fromEntries(
+      Object.entries(filters).filter(([_, v]) => v && v !== '')
+    );
+  };
   
   const fetchInitialRecipes = async () => {
     setLoading(true);
     try {
       const res = await searchRecipes('popular');
       setResults(res.data.hits.hits);
+      setHasActiveSearch(false);
     } catch (error) {
       console.error('Error fetching initial recipes:', error);
     } finally {
@@ -34,21 +41,32 @@ function App() {
   };
 
   useEffect(() => {
+    fetchInitialRecipes();
+  }, []);
+
+  useEffect(() => {
     const fetchPage = async () => {
+      if (selectedRecipe) return;
+      
       setLoading(true);
       try {
-        if (lastMode === 'basic') {
-          const res = await searchRecipes(lastQuery, currentPage);
-          setResults(res.data.hits.hits);
-        } else if (lastMode === 'advanced') {
-          const res = await advancedSearch(lastQuery.substring(1), currentPage);
-          setResults(res.data.hits.hits);
-        } else if (lastMode === 'filter') {
-          const res = await filterRecipes(lastFilters, currentPage);
-          setResults(res.data.hits.hits);
-        } else if (lastMode === 'home') {
-        const res = await searchRecipes('popular', currentPage);
-        setResults(res.data.hits.hits);
+        if (hasActiveSearch) {
+          if (lastMode === 'basic') {
+            const res = await searchRecipes(lastQuery, getActiveFilters(), currentPage);
+            setResults(res.data.hits.hits);
+          } else if (lastMode === 'advanced') {
+            const res = await advancedSearch(lastQuery.substring(1), getActiveFilters(), currentPage);
+            setResults(res.data.hits.hits);
+          }
+        } else {
+          const activeFilters = getActiveFilters();
+          if (Object.keys(activeFilters).length > 0) {
+            const res = await filterRecipes(activeFilters, currentPage);
+            setResults(res.data.hits.hits);
+          } else {
+            const res = await searchRecipes('popular', {}, currentPage);
+            setResults(res.data.hits.hits);
+          }
         }
       } catch (e) {
         console.error('Page fetch error:', e);
@@ -57,8 +75,8 @@ function App() {
       }
     };
 
-  if (!selectedRecipe) fetchPage();
-}, [currentPage]);
+    fetchPage();
+  }, [currentPage, filters]);
 
   const handleSearch = async (query) => {
     setLoading(true);
@@ -66,11 +84,13 @@ function App() {
     setCurrentPage(1);
     setLastQuery(query);
     setLastMode(query.startsWith('!') ? 'advanced' : 'basic');
+    setHasActiveSearch(true);
 
     try {
+      const activeFilters = getActiveFilters();
       const res = query.startsWith('!')
-        ? await advancedSearch(query.substring(1), 1)
-        : await searchRecipes(query, 1);
+        ? await advancedSearch(query.substring(1), activeFilters, 1)
+        : await searchRecipes(query, activeFilters, 1);
 
       setResults(res.data.hits.hits);
     } catch (error) {
@@ -80,7 +100,6 @@ function App() {
     }
   };
 
-
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
@@ -89,19 +108,24 @@ function App() {
     setLoading(true);
     setSelectedRecipe(null);
     setCurrentPage(1);
-    setLastMode('filter');
-    setLastFilters(filters);
-
-    const activeFilters = Object.fromEntries(
-      Object.entries(filters).filter(([_, v]) => v)
-    );
 
     try {
-      if (Object.keys(activeFilters).length > 0) {
-        const res = await filterRecipes(activeFilters, 1);
-        setResults(res.data.hits.hits);
+      if (hasActiveSearch) {
+        if (lastMode === 'basic') {
+          const res = await searchRecipes(lastQuery, getActiveFilters(), 1);
+          setResults(res.data.hits.hits);
+        } else if (lastMode === 'advanced') {
+          const res = await advancedSearch(lastQuery.substring(1), getActiveFilters(), 1);
+          setResults(res.data.hits.hits);
+        }
       } else {
-        fetchInitialRecipes();
+        const activeFilters = getActiveFilters();
+        if (Object.keys(activeFilters).length > 0) {
+          const res = await filterRecipes(activeFilters, 1);
+          setResults(res.data.hits.hits);
+        } else {
+          fetchInitialRecipes();
+        }
       }
     } catch (error) {
       console.error('Error applying filters:', error);
@@ -109,7 +133,6 @@ function App() {
       setLoading(false);
     }
   };
-
 
   const handleCardClick = (recipe) => {
     setSelectedRecipe(recipe);
@@ -120,22 +143,40 @@ function App() {
     setSelectedRecipe(null);
   };
 
+  const handleHomeClick = () => {
+    setSelectedRecipe(null);
+    setFilters({ category: '', cuisine: '', minRating: '' });
+    setCurrentPage(1);
+    setHasActiveSearch(false);
+    setLastQuery('popular');
+    setResetCounter(c => c + 1);
+    fetchInitialRecipes();
+  };
+
+  const getResultsHeading = () => {
+    if (results.length === 0) {
+      return "Nie znaleziono przepisów spełniających kryteria";
+    }
+    
+    const activeFilters = getActiveFilters();
+    const hasFilters = Object.keys(activeFilters).length > 0;
+    
+    if (hasActiveSearch && hasFilters) {
+      return `Wyniki wyszukiwania "${lastQuery}" z zastosowanymi filtrami`;
+    } else if (hasActiveSearch) {
+      return `Wyniki wyszukiwania "${lastQuery}"`;
+    } else if (hasFilters) {
+      return "Przepisy spełniające wybrane filtry";
+    } else {
+      return "Popularne przepisy";
+    }
+  };
+
   return (
     <div className="recipe-app">
       <header className="app-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <button 
-            onClick={() => {
-              setSelectedRecipe(null);
-              setFilters({ category: '', cuisine: '', minRating: '' });
-              setCurrentPage(1);
-              setLastMode('home');
-              setLastQuery('popular');
-              setResetCounter(c => c + 1);
-              fetchInitialRecipes();
-            }} 
-            className="home-button"
-          >
+          <button onClick={handleHomeClick} className="home-button">
             Strona Główna
           </button>
           <h1>Wyszukiwarka Przepisów</h1>
@@ -146,7 +187,6 @@ function App() {
         </div>
       </header>
 
-      
       <div className="app-content">
         <aside className="filter-sidebar">
           <FilterPanel 
@@ -166,9 +206,7 @@ function App() {
               ) : (
                 <>
                   <h2 className="results-heading">
-                    {results.length === 0 
-                      ? "Nie znaleziono przepisów spełniających kryteria" 
-                      : "Znalezione przepisy"}
+                    {getResultsHeading()}
                   </h2>
                   <div className="recipes-grid">
                     {results.map((recipe, idx) => (
