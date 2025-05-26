@@ -49,11 +49,16 @@ def basic_search(query: str, filters: Dict[str, str] = None, page: int = 1, page
     else:
         final_query = base_query
     
-    return es.search(index=RECIPE_INDEX, body={
+    result = es.search(index=RECIPE_INDEX, body={
         "query": final_query,
         "from": from_,
         "size": page_size
     })
+    
+    return {
+        "hits": result["hits"],
+        "total_results": result["hits"]["total"]["value"] if isinstance(result["hits"]["total"], dict) else result["hits"]["total"]
+    }
 
 def advanced_search(query: str, filters: Dict[str, str] = None, page: int = 1, page_size: int = 12):
     from_ = (page - 1) * page_size
@@ -90,11 +95,16 @@ def advanced_search(query: str, filters: Dict[str, str] = None, page: int = 1, p
     else:
         final_query = base_query
     
-    return es.search(index=RECIPE_INDEX, body={
+    result = es.search(index=RECIPE_INDEX, body={
         "query": final_query,
         "from": from_,
         "size": page_size
     })
+    
+    return {
+        "hits": result["hits"],
+        "total_results": result["hits"]["total"]["value"] if isinstance(result["hits"]["total"], dict) else result["hits"]["total"]
+    }
 
 def filter_search(filters: Dict[str, str], page: int = 1, page_size: int = 12):
     from_ = (page - 1) * page_size
@@ -113,18 +123,23 @@ def filter_search(filters: Dict[str, str], page: int = 1, page_size: int = 12):
                 pass
 
     if not must_filters:
-        return es.search(index=RECIPE_INDEX, body={
+        result = es.search(index=RECIPE_INDEX, body={
             "query": {"match_all": {}},
             "from": from_,
             "size": page_size
         })
-
-    return es.search(index=RECIPE_INDEX, body={
-        "query": {
-            "bool": {
-                "must": must_filters
-            }
-        },
-        "from": from_,
-        "size": page_size
-    })
+    else:
+        result = es.search(index=RECIPE_INDEX, body={
+            "query": {
+                "bool": {
+                    "must": must_filters
+                }
+            },
+            "from": from_,
+            "size": page_size
+        })
+    
+    return {
+        "hits": result["hits"],
+        "total_results": result["hits"]["total"]["value"] if isinstance(result["hits"]["total"], dict) else result["hits"]["total"]
+    }

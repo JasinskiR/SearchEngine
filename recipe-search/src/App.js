@@ -8,6 +8,7 @@ import './App.css';
 
 function App() {
   const [results, setResults] = useState([]);
+  const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [filters, setFilters] = useState({
@@ -32,6 +33,7 @@ function App() {
     try {
       const res = await searchRecipes('popular');
       setResults(res.data.hits.hits);
+      setTotalResults(res.data.total_results);
       setHasActiveSearch(false);
     } catch (error) {
       console.error('Error fetching initial recipes:', error);
@@ -54,18 +56,22 @@ function App() {
           if (lastMode === 'basic') {
             const res = await searchRecipes(lastQuery, getActiveFilters(), currentPage);
             setResults(res.data.hits.hits);
+            setTotalResults(res.data.total_results);
           } else if (lastMode === 'advanced') {
             const res = await advancedSearch(lastQuery.substring(1), getActiveFilters(), currentPage);
             setResults(res.data.hits.hits);
+            setTotalResults(res.data.total_results);
           }
         } else {
           const activeFilters = getActiveFilters();
           if (Object.keys(activeFilters).length > 0) {
             const res = await filterRecipes(activeFilters, currentPage);
             setResults(res.data.hits.hits);
+            setTotalResults(res.data.total_results);
           } else {
             const res = await searchRecipes('popular', {}, currentPage);
             setResults(res.data.hits.hits);
+            setTotalResults(res.data.total_results);
           }
         }
       } catch (e) {
@@ -93,6 +99,7 @@ function App() {
         : await searchRecipes(query, activeFilters, 1);
 
       setResults(res.data.hits.hits);
+      setTotalResults(res.data.total_results);
     } catch (error) {
       console.error('Error searching recipes:', error);
     } finally {
@@ -114,15 +121,18 @@ function App() {
         if (lastMode === 'basic') {
           const res = await searchRecipes(lastQuery, getActiveFilters(), 1);
           setResults(res.data.hits.hits);
+          setTotalResults(res.data.total_results);
         } else if (lastMode === 'advanced') {
           const res = await advancedSearch(lastQuery.substring(1), getActiveFilters(), 1);
           setResults(res.data.hits.hits);
+          setTotalResults(res.data.total_results);
         }
       } else {
         const activeFilters = getActiveFilters();
         if (Object.keys(activeFilters).length > 0) {
           const res = await filterRecipes(activeFilters, 1);
           setResults(res.data.hits.hits);
+          setTotalResults(res.data.total_results);
         } else {
           fetchInitialRecipes();
         }
@@ -160,16 +170,21 @@ function App() {
     
     const activeFilters = getActiveFilters();
     const hasFilters = Object.keys(activeFilters).length > 0;
+    const resultsCountText = `(${totalResults} ${totalResults === 1 ? 'wynik' : totalResults < 5 ? 'wyniki' : 'wyników'})`;
     
     if (hasActiveSearch && hasFilters) {
-      return `Wyniki wyszukiwania "${lastQuery}" z zastosowanymi filtrami`;
+      return `Wyniki wyszukiwania "${lastQuery}" z zastosowanymi filtrami ${resultsCountText}`;
     } else if (hasActiveSearch) {
-      return `Wyniki wyszukiwania "${lastQuery}"`;
+      return `Wyniki wyszukiwania "${lastQuery}" ${resultsCountText}`;
     } else if (hasFilters) {
-      return "Przepisy spełniające wybrane filtry";
+      return `Przepisy spełniające wybrane filtry ${resultsCountText}`;
     } else {
-      return "Popularne przepisy";
+      return `Popularne przepisy ${resultsCountText}`;
     }
+  };
+
+  const getTotalPages = () => {
+    return Math.ceil(totalResults / 12);
   };
 
   return (
@@ -217,15 +232,19 @@ function App() {
                       />
                     ))}
                   </div>
-                  <div className="pagination">
-                    {currentPage > 1 && (
-                      <button onClick={() => setCurrentPage(currentPage - 1)}>← Poprzednia</button>
-                    )}
-                    <span style={{ margin: '0 1rem' }}>Strona {currentPage}</span>
-                    {results.length === 12 && (
-                      <button onClick={() => setCurrentPage(currentPage + 1)}>Następna →</button>
-                    )}
-                  </div>
+                  {totalResults > 12 && (
+                    <div className="pagination">
+                      {currentPage > 1 && (
+                        <button onClick={() => setCurrentPage(currentPage - 1)}>← Poprzednia</button>
+                      )}
+                      <span style={{ margin: '0 1rem' }}>
+                        Strona {currentPage} z {getTotalPages()}
+                      </span>
+                      {currentPage < getTotalPages() && (
+                        <button onClick={() => setCurrentPage(currentPage + 1)}>Następna →</button>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
             </>
