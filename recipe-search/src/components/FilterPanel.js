@@ -1,12 +1,11 @@
 import React from 'react';
 import './FilterPanel.css';
 
-export default function FilterPanel({ filters, onFilterChange, onApplyFilters }) {
+export default function FilterPanel({ filters, onFilterChange }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     const newFilters = { ...filters, [name]: value };
     onFilterChange(newFilters);
-    onApplyFilters();
   };
 
   const handleReset = () => {
@@ -16,7 +15,6 @@ export default function FilterPanel({ filters, onFilterChange, onApplyFilters })
       minRating: ''
     };
     onFilterChange(resetFilters);
-    onApplyFilters();
   };
 
   const hasActiveFilters = Object.values(filters).some(value => value && value !== '');
@@ -88,7 +86,7 @@ export default function FilterPanel({ filters, onFilterChange, onApplyFilters })
       <div className="filter-info">
         <h4>Jak działają filtry</h4>
         <p>
-          Filtry automatycznie zawężają wyniki wyszukiwania. 
+          Filtry automatycznie zawężają wyniki wyszukiwania w oparciu o aktualne zapytanie. 
           {hasActiveFilters ? ' Aktywne filtry są obecnie zastosowane.' : ' Wybierz filtry aby zawęzić wyniki.'}
         </p>
         <h4>Tryb zaawansowany</h4>

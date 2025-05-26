@@ -8,7 +8,6 @@ import './App.css';
 
 function App() {
   const [results, setResults] = useState([]);
-  const [totalResults, setTotalResults] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [filters, setFilters] = useState({
@@ -33,10 +32,38 @@ function App() {
     try {
       const res = await searchRecipes('popular');
       setResults(res.data.hits.hits);
-      setTotalResults(res.data.total_results);
       setHasActiveSearch(false);
     } catch (error) {
       console.error('Error fetching initial recipes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const performSearch = async (query = lastQuery, mode = lastMode, page = 1, filtersToUse = getActiveFilters()) => {
+    setLoading(true);
+    try {
+      let res;
+      if (hasActiveSearch || query !== 'popular') {
+        if (mode === 'basic') {
+          res = await searchRecipes(query, filtersToUse, page);
+        } else if (mode === 'advanced') {
+          const cleanQuery = query.startsWith('!') ? query.substring(1) : query;
+          res = await advancedSearch(cleanQuery, filtersToUse, page);
+        } else {
+          res = await searchRecipes(query, filtersToUse, page);
+        }
+      } else {
+        if (Object.keys(filtersToUse).length > 0) {
+          res = await filterRecipes(filtersToUse, page);
+        } else {
+          res = await searchRecipes('popular', {}, page);
+        }
+      }
+      setResults(res.data.hits.hits);
+    } catch (error) {
+      console.error('Search error:', error);
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -47,101 +74,30 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const fetchPage = async () => {
-      if (selectedRecipe) return;
-      
-      setLoading(true);
-      try {
-        if (hasActiveSearch) {
-          if (lastMode === 'basic') {
-            const res = await searchRecipes(lastQuery, getActiveFilters(), currentPage);
-            setResults(res.data.hits.hits);
-            setTotalResults(res.data.total_results);
-          } else if (lastMode === 'advanced') {
-            const res = await advancedSearch(lastQuery.substring(1), getActiveFilters(), currentPage);
-            setResults(res.data.hits.hits);
-            setTotalResults(res.data.total_results);
-          }
-        } else {
-          const activeFilters = getActiveFilters();
-          if (Object.keys(activeFilters).length > 0) {
-            const res = await filterRecipes(activeFilters, currentPage);
-            setResults(res.data.hits.hits);
-            setTotalResults(res.data.total_results);
-          } else {
-            const res = await searchRecipes('popular', {}, currentPage);
-            setResults(res.data.hits.hits);
-            setTotalResults(res.data.total_results);
-          }
-        }
-      } catch (e) {
-        console.error('Page fetch error:', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPage();
-  }, [currentPage, filters]);
+    if (selectedRecipe) return;
+    performSearch(lastQuery, lastMode, currentPage);
+  }, [currentPage]);
 
   const handleSearch = async (query) => {
-    setLoading(true);
     setSelectedRecipe(null);
     setCurrentPage(1);
     setLastQuery(query);
     setLastMode(query.startsWith('!') ? 'advanced' : 'basic');
     setHasActiveSearch(true);
-
-    try {
-      const activeFilters = getActiveFilters();
-      const res = query.startsWith('!')
-        ? await advancedSearch(query.substring(1), activeFilters, 1)
-        : await searchRecipes(query, activeFilters, 1);
-
-      setResults(res.data.hits.hits);
-      setTotalResults(res.data.total_results);
-    } catch (error) {
-      console.error('Error searching recipes:', error);
-    } finally {
-      setLoading(false);
-    }
+    
+    await performSearch(query, query.startsWith('!') ? 'advanced' : 'basic', 1);
   };
 
-  const handleFilterChange = (newFilters) => {
+  const handleFilterChange = async (newFilters) => {
     setFilters(newFilters);
-  };
-
-  const applyFilters = async () => {
-    setLoading(true);
     setSelectedRecipe(null);
     setCurrentPage(1);
-
-    try {
-      if (hasActiveSearch) {
-        if (lastMode === 'basic') {
-          const res = await searchRecipes(lastQuery, getActiveFilters(), 1);
-          setResults(res.data.hits.hits);
-          setTotalResults(res.data.total_results);
-        } else if (lastMode === 'advanced') {
-          const res = await advancedSearch(lastQuery.substring(1), getActiveFilters(), 1);
-          setResults(res.data.hits.hits);
-          setTotalResults(res.data.total_results);
-        }
-      } else {
-        const activeFilters = getActiveFilters();
-        if (Object.keys(activeFilters).length > 0) {
-          const res = await filterRecipes(activeFilters, 1);
-          setResults(res.data.hits.hits);
-          setTotalResults(res.data.total_results);
-        } else {
-          fetchInitialRecipes();
-        }
-      }
-    } catch (error) {
-      console.error('Error applying filters:', error);
-    } finally {
-      setLoading(false);
-    }
+    
+    const activeFilters = Object.fromEntries(
+      Object.entries(newFilters).filter(([_, v]) => v && v !== '')
+    );
+    
+    await performSearch(lastQuery, lastMode, 1, activeFilters);
   };
 
   const handleCardClick = (recipe) => {
@@ -159,6 +115,7 @@ function App() {
     setCurrentPage(1);
     setHasActiveSearch(false);
     setLastQuery('popular');
+    setLastMode('basic');
     setResetCounter(c => c + 1);
     fetchInitialRecipes();
   };
@@ -170,21 +127,18 @@ function App() {
     
     const activeFilters = getActiveFilters();
     const hasFilters = Object.keys(activeFilters).length > 0;
-    const resultsCountText = `(${totalResults} ${totalResults === 1 ? 'wynik' : totalResults < 5 ? 'wyniki' : 'wyników'})`;
     
     if (hasActiveSearch && hasFilters) {
-      return `Wyniki wyszukiwania "${lastQuery}" z zastosowanymi filtrami ${resultsCountText}`;
+      const displayQuery = lastQuery.startsWith('!') ? lastQuery.substring(1) : lastQuery;
+      return `Wyniki wyszukiwania "${displayQuery}" z zastosowanymi filtrami`;
     } else if (hasActiveSearch) {
-      return `Wyniki wyszukiwania "${lastQuery}" ${resultsCountText}`;
+      const displayQuery = lastQuery.startsWith('!') ? lastQuery.substring(1) : lastQuery;
+      return `Wyniki wyszukiwania "${displayQuery}"`;
     } else if (hasFilters) {
-      return `Przepisy spełniające wybrane filtry ${resultsCountText}`;
+      return "Przepisy spełniające wybrane filtry";
     } else {
-      return `Popularne przepisy ${resultsCountText}`;
+      return "Popularne przepisy";
     }
-  };
-
-  const getTotalPages = () => {
-    return Math.ceil(totalResults / 12);
   };
 
   return (
@@ -206,8 +160,7 @@ function App() {
         <aside className="filter-sidebar">
           <FilterPanel 
             filters={filters} 
-            onFilterChange={handleFilterChange} 
-            onApplyFilters={applyFilters} 
+            onFilterChange={handleFilterChange}
           />
         </aside>
         
@@ -232,19 +185,15 @@ function App() {
                       />
                     ))}
                   </div>
-                  {totalResults > 12 && (
-                    <div className="pagination">
-                      {currentPage > 1 && (
-                        <button onClick={() => setCurrentPage(currentPage - 1)}>← Poprzednia</button>
-                      )}
-                      <span style={{ margin: '0 1rem' }}>
-                        Strona {currentPage} z {getTotalPages()}
-                      </span>
-                      {currentPage < getTotalPages() && (
-                        <button onClick={() => setCurrentPage(currentPage + 1)}>Następna →</button>
-                      )}
-                    </div>
-                  )}
+                  <div className="pagination">
+                    {currentPage > 1 && (
+                      <button onClick={() => setCurrentPage(currentPage - 1)}>← Poprzednia</button>
+                    )}
+                    <span style={{ margin: '0 1rem' }}>Strona {currentPage}</span>
+                    {results.length === 12 && (
+                      <button onClick={() => setCurrentPage(currentPage + 1)}>Następna →</button>
+                    )}
+                  </div>
                 </>
               )}
             </>
